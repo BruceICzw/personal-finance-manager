@@ -23,14 +23,19 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ selectedFilter }) => {
 
   // Get category totals
   const categoryTotals = getCategoryTotals(expenseTransactions);
-
+console.log('Category Totals:', categoryTotals);
   // Prepare data for pie chart
   const chartData = categoryTotals.map(item => {
     const category = categories.find(c => c.id === item.categoryId);
+      console.log('Matching Category:', category); // Debugging
+      console.log('Category ID:', item.categoryId);
+    // Generate a random color
+    const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+    
     return {
       name: category?.name || 'Other',
       amount: item.amount,
-      color: category?.color || '#6b7280',
+      color: randomColor,
       legendFontColor: theme.colors.text,
       legendFontSize: 12,
     };
@@ -50,6 +55,16 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ selectedFilter }) => {
       </Card>
     );
   }
+  const chartConfig = {
+    backgroundGradientFrom: '#1E2923',
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: '#08130D',
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2, // optional, default 3
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false, // optional
+  };
 
   return (
     <Card style={styles.container}>
@@ -58,17 +73,17 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ selectedFilter }) => {
       </Text>
       <View style={styles.chartContainer}>
         <PieChart
+          
           data={chartData}
-          width={Dimensions.get('window').width - 40} // Adjust width to fit the screen
+          width={Dimensions.get('window').width - 40} 
           height={220}
-          chartConfig={{
-            color: () => theme.colors.text,
-          }}
-          accessor="amount"
+          chartConfig={chartConfig}
+          accessor={"amount"}
           backgroundColor="transparent"
           paddingLeft="15"
           center={[0, 0]}
           absolute
+          hasLegend={true}
         />
       </View>
     </Card>

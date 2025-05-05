@@ -31,53 +31,26 @@ export async function initDatabase(): Promise<void> {
     // Already initialized
     return;
   }
-  try {
-    // Open (or create) the database
-    db = await SQLite.openDatabaseAsync(DATABASE_NAME);
-
-
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      // Open (or create) the database
+      db = await SQLite.openDatabaseAsync(DATABASE_NAME);
       // Create Categories table if it does not exist
-    await db.execAsync(`
+      await db.execAsync(`
       CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         color TEXT NOT NULL
+        icon TEXT NOT NULL DEFAULT '',
+        type TEXT NOT NULL DEFAULT 'expense'
       );
     `);
 
-    // Check if the `icon` column exists in the `categories` table
-    const result = await db!.getAllAsync<{ name: string }>(
-      "PRAGMA table_info(categories)"
-    );
-    const hasIconColumn = result.some(column => column.name === "icon");
+     
 
-    if (!hasIconColumn) {
-      // Create a new table with the updated schema
-      await db!.execAsync(`
-        CREATE TABLE IF NOT EXISTS categories_new (
-          id INTEGER PRIMARY KEY NOT NULL,
-          name TEXT NOT NULL,
-          color TEXT NOT NULL,
-          icon TEXT NOT NULL,
-          type TEXT NOT NULL
-        );
-      `);
-
-      // Copy data from the old table to the new table
-      await db!.execAsync(`
-        INSERT INTO categories_new (id, name, color, icon, type)
-        SELECT id, name, color, '' AS icon, 'expense' AS type FROM categories;
-      `);
-
-      // Drop the old table
-      await db!.execAsync("DROP TABLE categories;");
-
-      // Rename the new table to the original name
-      await db!.execAsync("ALTER TABLE categories_new RENAME TO categories;");
-    }
-
-    // Create Transactions table if it does not exist
-    await db.execAsync(`
+      // Create Transactions table if it does not exist
+      await db.execAsync(`
       CREATE TABLE IF NOT EXISTS transactions (
         id TEXT PRIMARY KEY NOT NULL,
         amount REAL NOT NULL,
@@ -88,8 +61,8 @@ export async function initDatabase(): Promise<void> {
       );
     `);
 
-    // Create Budgets table if it does not exist
-    await db.execAsync(`
+      // Create Budgets table if it does not exist
+      await db.execAsync(`
       CREATE TABLE IF NOT EXISTS budgets (
         id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
@@ -101,45 +74,46 @@ export async function initDatabase(): Promise<void> {
       );
     `);
 
-    // Check if default data needs to be inserted
-    const existing: Category[] = await db.getAllAsync<Category>(
-      "SELECT * FROM categories"
-    );
-    if (existing.length === 0) {
-      const defaultCategories = [
-        { name: "General", color: "#9e9e9e", icon: "📦", type: "expense" },
-        { name: "Food", color: "#ff5252", icon: "🍔", type: "expense" },
-        { name: "Travel", color: "#536dfe", icon: "✈️", type: "expense" },
-        { name: "Shopping", color: "#ffab40", icon: "🛍️", type: "expense" },
-        { name: "Work", color: "#00c853", icon: "💼", type: "income" },
-        { name: "Salary", color: "#00b0ff", icon: "💰", type: "income" },
-        { name: "Investment", color: "#ffd740", icon: "📈", type: "income" },
-        { name: "Entertainment", color: "#ff4081", icon: "🎉", type: "expense" },
-        { name: "Health", color: "#64dd17", icon: "🏥", type: "expense" },
-        { name: "Utilities", color: "#ff6d00", icon: "💡", type: "expense" },
-        { name: "Education", color: "#2979ff", icon: "📚", type: "expense" },
-        { name: "Miscellaneous", color: "#ff4081", icon: "🗂️", type: "expense" },
-        { name: "Savings", color: "#00e676", icon: "💵", type: "income" },
-        { name: "Gifts", color: "#ff4081", icon: "🎁", type: "expense" },
-        { name: "Subscriptions", color: "#ff6d00", icon: "📅", type: "expense" },
-        { name: "Taxes", color: "#ff3d00", icon: "💸", type: "expense" },
-        { name: "Insurance", color: "#ff6d00", icon: "🛡️", type: "expense" },
-        { name: "Charity", color: "#ff4081", icon: "❤️", type: "expense" },
-        { name: "Emergency Fund", color: "#00c853", icon: "🚑", type: "expense" },
-        { name: "Retirement", color: "#ffd740", icon: "👵", type: "income" },
-        { name: "Business", color: "#00b0ff", icon: "🏢", type: "income" },
-      ];
+      // Check if default data needs to be inserted
+      const existing = await db.getAllAsync<Category>("SELECT * FROM categories"
+      );
+      if (existing.length === 0) {
+        const defaultCategories = [
+          { name: "General", color: "#9e9e9e", icon: "📦", type: "expense" },
+          { name: "Food", color: "#ff5252", icon: "🍔", type: "expense" },
+          { name: "Travel", color: "#536dfe", icon: "✈️", type: "expense" },
+          { name: "Shopping", color: "#ffab40", icon: "🛍️", type: "expense" },
+          { name: "Work", color: "#00c853", icon: "💼", type: "income" },
+          { name: "Salary", color: "#00b0ff", icon: "💰", type: "income" },
+          { name: "Investment", color: "#ffd740", icon: "📈", type: "income" },
+          { name: "Entertainment", color: "#ff4081", icon: "🎉", type: "expense" },
+          { name: "Health", color: "#64dd17", icon: "🏥", type: "expense" },
+          { name: "Utilities", color: "#ff6d00", icon: "💡", type: "expense" },
+          { name: "Education", color: "#2979ff", icon: "📚", type: "expense" },
+          { name: "Miscellaneous", color: "#ff4081", icon: "🗂️", type: "expense" },
+          { name: "Savings", color: "#00e676", icon: "💵", type: "income" },
+          { name: "Gifts", color: "#ff4081", icon: "🎁", type: "expense" },
+          { name: "Subscriptions", color: "#ff6d00", icon: "📅", type: "expense" },
+          { name: "Taxes", color: "#ff3d00", icon: "💸", type: "expense" },
+          { name: "Insurance", color: "#ff6d00", icon: "🛡️", type: "expense" },
+          { name: "Charity", color: "#ff4081", icon: "❤️", type: "expense" },
+          { name: "Emergency Fund", color: "#00c853", icon: "🚑", type: "expense" },
+          { name: "Retirement", color: "#ffd740", icon: "👵", type: "income" },
+          { name: "Business", color: "#00b0ff", icon: "🏢", type: "income" },
+        ];
 
-      for (const cat of defaultCategories) {
-        await db!.runAsync(
-          `INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)`,
-          [cat.name, cat.color, cat.icon, cat.type]
-        );
+        for (const cat of defaultCategories) {
+          await db!.runAsync(
+            `INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)`,
+            [cat.name, cat.color, cat.icon, cat.type]
+          );
+        }
       }
+    } catch (error) {
+      retries--;
+      if (retries === 0) throw error;
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
-  } catch (error) {
-    console.error("Failed to initialize database:", error);
-    throw error;
   }
 }
 /**

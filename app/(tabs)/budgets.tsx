@@ -56,8 +56,10 @@ export default function BudgetsScreen() {
 
   // Calculate progress percentage
   const getProgressPercentage = (budget: Budget) => {
-    if (budget.amount <= 0) return 0;
-    const percentage = (budget.spent / budget.amount) * 100;
+    const amount = budget.amount ?? 0;
+    const spent = budget.spent ?? 0;
+    if (amount <= 0) return 0;
+    const percentage = (spent / amount) * 100;
     return Math.min(percentage, 100); // Cap at 100%
   };
 
@@ -135,6 +137,12 @@ export default function BudgetsScreen() {
                   const progressPercentage = getProgressPercentage(budget);
                   const progressColor = getProgressColor(progressPercentage);
                   
+                  //Default spent and amount to 0 if undefined
+                  const spent = budget.spent ?? 0;
+                  const amount = budget.amount ?? 0;
+                  const remaining = amount - spent;
+
+
                   return (
                     <Card key={budget.id} style={styles.budgetCard}>
                       <View style={styles.budgetHeader}>
@@ -183,7 +191,7 @@ export default function BudgetsScreen() {
                         </View>
                         
                         <Text style={[styles.progressText, { color: theme.colors.text }]}>
-                          {progressPercentage.toFixed(0)}%
+                          {(progressPercentage ?? 0).toFixed(0)}%
                         </Text>
                       </View>
                       
@@ -193,7 +201,7 @@ export default function BudgetsScreen() {
                             Spent
                           </Text>
                           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-                            ${budget.spent.toFixed(2)}
+                            ${spent.toFixed(2)}
                           </Text>
                         </View>
                         
@@ -202,7 +210,7 @@ export default function BudgetsScreen() {
                             Budget
                           </Text>
                           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-                            ${budget.amount.toFixed(2)}
+                            ${amount.toFixed(2)}
                           </Text>
                         </View>
                         
@@ -214,14 +222,14 @@ export default function BudgetsScreen() {
                             style={[
                               styles.detailValue, 
                               { 
-                                color: budget.amount - budget.spent >= 0 
+                                color: remaining >= 0 
                                   ? theme.colors.incomeText 
                                   : theme.colors.expenseText 
                               }
                             ]}
                           >
-                            ${Math.abs(budget.amount - budget.spent).toFixed(2)}
-                            {budget.amount - budget.spent < 0 ? ' over' : ''}
+                            ${Math.abs(remaining).toFixed(2)}
+                            {remaining < 0 ? ' over' : ''}
                           </Text>
                         </View>
                       </View>
@@ -256,6 +264,11 @@ export default function BudgetsScreen() {
                 {inactiveBudgets.map(budget => {
                   const progressPercentage = getProgressPercentage(budget);
                   const progressColor = getProgressColor(progressPercentage);
+
+                  // Default spent and amount to 0 if undefined
+                  const spent = budget.spent ?? 0;
+                  const amount = budget.amount ?? 0;
+                  const remaining = amount - spent;
                   
                   return (
                     <Card key={budget.id} style={[styles.budgetCard, styles.inactiveBudgetCard]}>
@@ -288,7 +301,7 @@ export default function BudgetsScreen() {
                             Spent
                           </Text>
                           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-                            ${budget.spent.toFixed(2)}
+                            ${spent.toFixed(2)}
                           </Text>
                         </View>
                         
@@ -297,25 +310,25 @@ export default function BudgetsScreen() {
                             Budget
                           </Text>
                           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-                            ${budget.amount.toFixed(2)}
+                            ${amount.toFixed(2)}
                           </Text>
                         </View>
                         
                         <View style={styles.detailItem}>
                           <Text style={[styles.detailLabel, { color: theme.colors.text }]}>
-                            {budget.spent <= budget.amount ? 'Saved' : 'Overspent'}
+                            {remaining >= 0 ? 'Saved' : 'Overspent'}
                           </Text>
                           <Text 
                             style={[
                               styles.detailValue, 
                               { 
-                                color: budget.amount - budget.spent >= 0 
+                                color: remaining >= 0 
                                   ? theme.colors.incomeText 
                                   : theme.colors.expenseText 
                               }
                             ]}
                           >
-                            ${Math.abs(budget.amount - budget.spent).toFixed(2)}
+                            ${Math.abs(remaining).toFixed(2)}
                           </Text>
                         </View>
                       </View>

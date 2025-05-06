@@ -26,7 +26,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ selectedFilter }) => {
 console.log('Category Totals:', categoryTotals);
   // Prepare data for pie chart
   const chartData = categoryTotals.map(item => {
-    const category = categories.find(c => c.id === item.categoryId);
+    const category = categories.find(c => c.id == item.categoryId);
       console.log('Matching Category:', category); // Debugging
       console.log('Category ID:', item.categoryId);
     // Generate a random color
@@ -35,7 +35,7 @@ console.log('Category Totals:', categoryTotals);
     return {
       name: category?.name || 'Other',
       amount: item.amount,
-      color: randomColor,
+      color: category?.color || randomColor,
       legendFontColor: theme.colors.text,
       legendFontSize: 12,
     };

@@ -102,7 +102,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return (
             transactionDate >= budgetStartDate && 
             transactionDate <= budgetEndDate && 
-            (!budget.categoryId || budget.categoryId === transaction.categoryId)
+            (!budget.categoryId || budget.categoryId == transaction.categoryId)
           );
         });
         

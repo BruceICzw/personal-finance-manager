@@ -1,137 +1,206 @@
-// SQLite database module for Expo (optimized and TypeScript-compatible)
-// Using async/await patterns as per Expo SQLite documentation&#8203;:contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}&#8203;:contentReference[oaicite:2]{index=2}
-
-import { Budget, Transaction, TransactionType } from '@/types';
+import { Budget, Transaction, Category } from '@/types';
 import * as SQLite from 'expo-sqlite';
 
-/**
- * Interface representing a Category row in the database.
- */
-export interface Category {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-  type: TransactionType;
-}
-
 const DATABASE_NAME = 'wealthwiseDB.db';
-
-// Cached database instance
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
  * Initialize the database:
- * - Opens the database (creates if not exists)&#8203;:contentReference[oaicite:3]{index=3}.
+ * - Opens the database (creates if not exists).
  * - Creates tables if they do not exist.
  * - Inserts default category data if table is empty.
  */
 export async function initDatabase(): Promise<void> {
-  if (db !== null) {
-    // Already initialized
-    return;
+  if (db) {
+    console.log('Database already initialized.');
+    return; // Database already initialized
   }
-  let retries = 3;
-  while (retries > 0) {
-    try {
-      // Open (or create) the database
-      db = await SQLite.openDatabaseAsync(DATABASE_NAME);
-      // Create Categories table if it does not exist
-      await db.execAsync(`
+
+  console.log(`Initializing database: ${DATABASE_NAME}`);
+  try {
+    // Correct call to openDatabaseAsync with only the database name.
+    // This uses default options and the default directory.
+    db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+    console.log('Database opened successfully.');
+
+    // Enable WAL mode for better concurrency
+    await db.execAsync('PRAGMA journal_mode = WAL;');
+
+    // Create tables if they don't exist
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name TEXT NOT NULL,
-        color TEXT NOT NULL
-        icon TEXT NOT NULL DEFAULT '',
-        type TEXT NOT NULL DEFAULT 'expense'
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        type TEXT NOT NULL CHECK(type IN ('income', 'expense'))
       );
-    `);
 
-     
-
-      // Create Transactions table if it does not exist
-      await db.execAsync(`
       CREATE TABLE IF NOT EXISTS transactions (
-        id TEXT PRIMARY KEY NOT NULL,
+        id TEXT PRIMARY KEY,
+        categoryId INTEGER,
         amount REAL NOT NULL,
-        date TEXT NOT NULL,
+        date TEXT NOT NULL, -- Store dates as ISO8601 strings (YYYY-MM-DD)
         description TEXT,
-        categoryId TEXT NOT NULL,
-        type TEXT NOT NULL
+        type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
+        FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE SET NULL
       );
-    `);
 
-      // Create Budgets table if it does not exist
-      await db.execAsync(`
       CREATE TABLE IF NOT EXISTS budgets (
         id TEXT PRIMARY KEY NOT NULL,
-        name TEXT NOT NULL,
+        name TEXT NOT NULL, -- Added name column based on previous context
+        categoryId TEXT, -- Changed to TEXT, Nullable for 'All Categories' budget
         amount REAL NOT NULL,
-        spent REAL NOT NULL,
-        categoryId TEXT,
+        spent REAL NOT NULL DEFAULT 0, -- Add this line for the spent amount
         startDate TEXT NOT NULL,
-        endDate TEXT NOT NULL
+        endDate TEXT NOT NULL,
+        FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE SET NULL -- Changed ON DELETE action
       );
     `);
+    console.log('Tables checked/created successfully.');
 
-      // Check if default data needs to be inserted
-      const existing = await db.getAllAsync<Category>("SELECT * FROM categories"
+    // Check if categories table is empty and insert defaults if needed
+    const categoriesResult = await db.getAllAsync<Category>(
+      'SELECT * FROM categories',
+    );
+    if (categoriesResult.length === 0) {
+      console.log('Inserting default categories...');
+      // Use a transaction for bulk inserts
+      await db.withTransactionAsync(async () => {
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['General', '#9e9e9e', '📦', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Food', '#ff5252', '🍔', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Travel', '#536dfe', '✈️', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Shopping', '#ffab40', '🛍️', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Work', '#00c853', '💼', 'income'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Salary', '#00b0ff', '💰', 'income'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Investment', '#ffd740', '📈', 'income'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Entertainment', '#ff4081', '🎉', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Health', '#64dd17', '🏥', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Utilities', '#ff6d00', '💡', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Education', '#2979ff', '📚', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Miscellaneous', '#ff4081', '🗂️', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Savings', '#00e676', '💵', 'income'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Gifts', '#ff4081', '🎁', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Subscriptions', '#ff6d00', '📅', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Taxes', '#ff3d00', '💸', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Insurance', '#ff6d00', '🛡️', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Charity', '#ff4081', '❤️', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Emergency Fund', '#00c853', '🚑', 'expense'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Retirement', '#ffd740', '👵', 'income'],
+        );
+        await db!.runAsync(
+          'INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)',
+          ['Business', '#00b0ff', '🏢', 'income'],
+        );
+      });
+      console.log('Default categories inserted.');
+    } else {
+      console.log(
+        `Categories table already populated with ${categoriesResult.length} items.`,
       );
-      if (existing.length === 0) {
-        const defaultCategories = [
-          { name: "General", color: "#9e9e9e", icon: "📦", type: "expense" },
-          { name: "Food", color: "#ff5252", icon: "🍔", type: "expense" },
-          { name: "Travel", color: "#536dfe", icon: "✈️", type: "expense" },
-          { name: "Shopping", color: "#ffab40", icon: "🛍️", type: "expense" },
-          { name: "Work", color: "#00c853", icon: "💼", type: "income" },
-          { name: "Salary", color: "#00b0ff", icon: "💰", type: "income" },
-          { name: "Investment", color: "#ffd740", icon: "📈", type: "income" },
-          { name: "Entertainment", color: "#ff4081", icon: "🎉", type: "expense" },
-          { name: "Health", color: "#64dd17", icon: "🏥", type: "expense" },
-          { name: "Utilities", color: "#ff6d00", icon: "💡", type: "expense" },
-          { name: "Education", color: "#2979ff", icon: "📚", type: "expense" },
-          { name: "Miscellaneous", color: "#ff4081", icon: "🗂️", type: "expense" },
-          { name: "Savings", color: "#00e676", icon: "💵", type: "income" },
-          { name: "Gifts", color: "#ff4081", icon: "🎁", type: "expense" },
-          { name: "Subscriptions", color: "#ff6d00", icon: "📅", type: "expense" },
-          { name: "Taxes", color: "#ff3d00", icon: "💸", type: "expense" },
-          { name: "Insurance", color: "#ff6d00", icon: "🛡️", type: "expense" },
-          { name: "Charity", color: "#ff4081", icon: "❤️", type: "expense" },
-          { name: "Emergency Fund", color: "#00c853", icon: "🚑", type: "expense" },
-          { name: "Retirement", color: "#ffd740", icon: "👵", type: "income" },
-          { name: "Business", color: "#00b0ff", icon: "🏢", type: "income" },
-        ];
-
-        for (const cat of defaultCategories) {
-          await db!.runAsync(
-            `INSERT INTO categories (name, color, icon, type) VALUES (?, ?, ?, ?)`,
-            [cat.name, cat.color, cat.icon, cat.type]
-          );
-        }
-      }
-    } catch (error) {
-      retries--;
-      if (retries === 0) throw error;
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    // Propagate the error or handle it appropriately in the calling code
+    throw error;
   }
 }
+
+/**
+ * Gets the initialized database instance. Throws an error if not initialized.
+ * @returns The SQLiteDatabase instance.
+ */
+export function getDatabase(): SQLite.SQLiteDatabase {
+  if (!db) {
+    // Attempt to initialize if not already done (optional, depends on app flow)
+    // console.warn('Database accessed before explicit initialization. Attempting to initialize now.');
+    // await initDatabase(); // Be cautious with async calls here if not handled properly
+
+    // It's generally better to ensure initDatabase is called reliably at app start.
+    console.error('Database not initialized. Call initDatabase() first.');
+    throw new Error(
+      'Database is not initialized. Ensure initDatabase() is called and completes successfully before accessing the database.',
+    );
+  }
+  return db;
+}
+
+// --- Modify your other database functions to use getDatabase() ---
+
 /**
  * Fetch all categories from the database.
  * @returns Promise resolving to an array of Category objects.
  */
 export async function getCategories(): Promise<Category[]> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase(); // Get the initialized DB instance
   try {
-    const categories = await db!.getAllAsync<Category>(
-      'SELECT id, name, color, icon, type FROM categories'
+    const results = await currentDb.getAllAsync<Category>(
+      'SELECT * FROM categories ORDER BY name',
     );
-    return categories;
+    console.log(`Fetched ${results.length} categories.`);
+    return results;
   } catch (error) {
-    console.error('Failed to fetch categories:', error);
-    throw error;
+    console.error('Error fetching categories:', error);
+    return []; // Return empty array on error
   }
 }
 
@@ -143,20 +212,21 @@ export async function getCategories(): Promise<Category[]> {
  */
 export async function insertCategory(
   name: string,
-  color: string
+  color: string,
 ): Promise<number> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const result = await db!.runAsync(
+    const result = await currentDb.runAsync(
       'INSERT INTO categories (name, color) VALUES (?, ?)',
-      [name, color]
+      [name, color],
     );
-    return result.lastInsertRowId as number;
+    console.log(
+      `Category '${name}' inserted with ID: ${result.lastInsertRowId}`,
+    );
+    return result.lastInsertRowId;
   } catch (error) {
-    console.error('Failed to insert category:', error);
-    throw error;
+    console.error(`Error inserting category '${name}':`, error);
+    throw error; // Re-throw
   }
 }
 
@@ -170,243 +240,270 @@ export async function insertCategory(
 export async function updateCategory(
   id: number,
   name: string,
-  color: string
+  color: string,
 ): Promise<number> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const result = await db!.runAsync(
+    const result = await currentDb.runAsync(
       'UPDATE categories SET name = ?, color = ? WHERE id = ?',
-      [name, color, id]
+      [name, color, id],
     );
+    console.log(`Category ID ${id} updated. Rows affected: ${result.changes}`);
     return result.changes;
   } catch (error) {
-    console.error('Failed to update category:', error);
+    console.error(`Error updating category ID ${id}:`, error);
     throw error;
   }
 }
 
 /**
- * Deletes a category by ID.
+ * Deletes a category.
  * @param id ID of the category to delete.
  * @returns Promise resolving to the number of rows deleted.
  */
 export async function deleteCategory(id: number): Promise<number> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const result = await db!.runAsync('DELETE FROM categories WHERE id = ?', [
-      id,
-    ]);
+    // Note: Related transactions might have categoryId set to NULL due to FOREIGN KEY constraint
+    const result = await currentDb.runAsync(
+      'DELETE FROM categories WHERE id = ?',
+      [id],
+    );
+    console.log(`Category ID ${id} deleted. Rows affected: ${result.changes}`);
     return result.changes;
   } catch (error) {
-    console.error('Failed to delete category:', error);
+    console.error(`Error deleting category ID ${id}:`, error);
     throw error;
   }
 }
 
 /**
- * Fetches all transactions from the database.
- * @returns Promise resolving to an array of transactions.
+ * Fetch all transactions from the database.
+ * @returns Promise resolving to an array of Transaction objects.
  */
 export async function getTransactions(): Promise<Transaction[]> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const transactions = await db!.getAllAsync<Transaction>(
-      'SELECT * FROM transactions'
+    // Order by date descending to show recent transactions first
+    const results = await currentDb.getAllAsync<Transaction>(
+      'SELECT * FROM transactions ORDER BY date DESC',
     );
-    return transactions;
+    console.log(`Fetched ${results.length} transactions.`);
+    return results;
   } catch (error) {
-    console.error('Failed to fetch transactions:', error);
-    throw error;
+    console.error('Error fetching transactions:', error);
+    return [];
   }
 }
 
 /**
- * Inserts a new transaction into the database.
- * @param transaction Transaction object to insert.
- * @returns Promise resolving to the new transaction's ID.
+ * Adds a new transaction to the database.
+ * @param transaction Transaction object (without id).
  */
-export async function addTransaction(transaction: Transaction): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+export async function addTransaction(
+  transaction: Transaction,
+): Promise<void> {
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync(
-      'INSERT INTO transactions (id, amount, date, description, categoryId, type) VALUES (?, ?, ?, ?, ?, ?)',
+    await currentDb.runAsync(
+      'INSERT INTO transactions (id, categoryId, amount, date, description, type) VALUES (?, ?, ?, ?, ?, ?)',
       [
         transaction.id,
+        transaction.categoryId,
         transaction.amount,
         transaction.date,
-        transaction.description,
-        transaction.categoryId,
+        transaction.description ?? null,
         transaction.type,
-      ]
+      ],
     );
+    console.log(`Transaction added with ID: ${transaction.id}`);
   } catch (error) {
-    console.error('Failed to add transaction:', error);
+    console.error('Error adding transaction:', error);
     throw error;
   }
 }
 
 /**
  * Updates an existing transaction.
- * @param transaction Transaction object to update.
- * @returns Promise resolving to the number of rows updated.
+ * @param transaction The complete Transaction object with id.
  */
 export async function updateTransaction(
-  transaction: Transaction
+  transaction: Transaction,
 ): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync(
-      'UPDATE transactions SET amount = ?, date = ?, description = ?, categoryId = ?, type = ? WHERE id = ?',
+    const result = await currentDb.runAsync(
+      'UPDATE transactions SET categoryId = ?, amount = ?, date = ?, description = ?, type = ? WHERE id = ?',
       [
+        transaction.categoryId,
         transaction.amount,
         transaction.date,
-        transaction.description,
-        transaction.categoryId,
+        transaction.description ?? null,
         transaction.type,
         transaction.id,
-      ]
+      ],
     );
+    console.log(
+      `Transaction ID ${transaction.id} updated. Rows affected: ${result.changes}`,
+    );
+    if (result.changes === 0) {
+      console.warn(
+        `Attempted to update non-existent transaction ID: ${transaction.id}`,
+      );
+    }
   } catch (error) {
-    console.error('Failed to update transaction:', error);
+    console.error(`Error updating transaction ID ${transaction.id}:`, error);
     throw error;
   }
 }
 
 /**
- * Deletes a transaction by ID.
+ * Deletes a transaction by its ID.
  * @param id ID of the transaction to delete.
- * @returns Promise resolving to the number of rows deleted.
  */
 export async function deleteTransaction(id: string): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync('DELETE FROM transactions WHERE id = ?', [id]);
+    const result = await currentDb.runAsync(
+      'DELETE FROM transactions WHERE id = ?',
+      [id],
+    );
+    console.log(
+      `Transaction ID ${id} deleted. Rows affected: ${result.changes}`,
+    );
+    if (result.changes === 0) {
+      console.warn(`Attempted to delete non-existent transaction ID: ${id}`);
+    }
   } catch (error) {
-    console.error('Failed to delete transaction:', error);
+    console.error(`Error deleting transaction ID ${id}:`, error);
     throw error;
   }
 }
 
-
 /**
- * Fetches all budgets
- * @returns Promise resolving to an array of budgets.
+ * Fetch all budgets from the database.
+ * @returns Promise resolving to an array of Budget objects.
  */
 export async function getBudgets(): Promise<Budget[]> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const budgets = await db!.getAllAsync<Budget>(
-      'SELECT id, name, amount, spent, categoryId, startDate, endDate FROM budgets'
+    const results = await currentDb.getAllAsync<Budget>(
+      'SELECT * FROM budgets ORDER BY endDate DESC',
     );
-    return budgets;
+    console.log(`Fetched ${results.length} budgets.`);
+    return results;
   } catch (error) {
-    console.error('Failed to fetch budgets:', error);
-    throw error;
+    console.error('Error fetching budgets:', error);
+    return [];
   }
 }
 
 /**
- * Inserts a new budget into the database.
- * @param budget Budget object to insert.
- * @returns Promise resolving to the new budget's ID.
+ * Adds a new budget to the database.
+ * @param budget Budget object (without id).
  */
 export async function addBudget(budget: Budget): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync(
-      'INSERT INTO budgets (id, name, amount, spent, categoryId, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    await currentDb.runAsync(
+      'INSERT INTO budgets (name, id, categoryId, amount, spent,  startDate, endDate) VALUES (?, ?, ?, ?, ?, ?,  ?)',
       [
-        budget.id,
         budget.name,
-        budget.amount,
-        budget.spent,
+        budget.id,
         budget.categoryId,
+        budget.amount,
+        0, // Initial spent amount is 0
         budget.startDate,
         budget.endDate,
-      ]
+      ],
     );
+    console.log(`Budget added with ID: ${budget.id}`);
   } catch (error) {
-    console.error('Failed to add budget:', error);
+    console.error('Error adding budget:', error);
     throw error;
   }
 }
 
 /**
  * Updates an existing budget.
- * @param budget Budget object to update.
- * @returns Promise resolving to the number of rows updated.
+ * @param budget The complete Budget object with id.
  */
 export async function updateBudget(budget: Budget): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync(
-      'UPDATE budgets SET name = ?, amount = ?, spent = ?, categoryId = ?, startDate = ?, endDate = ? WHERE id = ?',
+    const result = await currentDb.runAsync(
+      'UPDATE budgets SET name = ?,  categoryId = ?, amount = ?, spent = ?,  startDate = ?, endDate = ? WHERE id = ?',
       [
         budget.name,
+        budget.categoryId,
         budget.amount,
         budget.spent,
-        budget.categoryId,
         budget.startDate,
         budget.endDate,
         budget.id,
-      ]
+      ],
     );
+    console.log(
+      `Budget ID ${budget.id} updated. Rows affected: ${result.changes}`,
+    );
+    if (result.changes === 0) {
+      console.warn(`Attempted to update non-existent budget ID: ${budget.id}`);
+    }
   } catch (error) {
-    console.error('Failed to update budget:', error);
+    console.error(`Error updating budget ID ${budget.id}:`, error);
     throw error;
   }
 }
-
 
 /**
- * Deletes a budget by ID.
+ * Deletes a budget by its ID.
  * @param id ID of the budget to delete.
- * @returns Promise resolving to the number of rows deleted.
  */
-
 export async function deleteBudget(id: string): Promise<void> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    await db!.runAsync('DELETE FROM budgets WHERE id = ?', [id]);
+    const result = await currentDb.runAsync(
+      'DELETE FROM budgets WHERE id = ?',
+      [id],
+    );
+    console.log(`Budget ID ${id} deleted. Rows affected: ${result.changes}`);
+    if (result.changes === 0) {
+      console.warn(`Attempted to delete non-existent budget ID: ${id}`);
+    }
   } catch (error) {
-    console.error('Failed to delete budget:', error);
+    console.error(`Error deleting budget ID ${id}:`, error);
     throw error;
   }
 }
 
-
+/**
+ * Exports database data as a JSON string.
+ * @returns Promise resolving to a JSON string of the data.
+ */
 export async function exportData(): Promise<string> {
-  if (!db) {
-    await initDatabase();
-  }
+  const currentDb = getDatabase();
   try {
-    const categories = await getCategories();
-    const transactions = await getTransactions();
-    const budgets = await getBudgets();
+    const categories = await currentDb.getAllAsync<Category>(
+      'SELECT * FROM categories',
+    );
+    const transactions = await currentDb.getAllAsync<Transaction>(
+      'SELECT * FROM transactions',
+    );
+    const budgets = await currentDb.getAllAsync<Budget>(
+      'SELECT * FROM budgets',
+    );
 
-    return JSON.stringify({ categories, transactions, budgets }, null, 2);
+    const data = {
+      categories,
+      transactions,
+      budgets,
+    };
+    console.log('Data exported successfully.');
+    return JSON.stringify(data, null, 2); // Pretty print JSON
   } catch (error) {
-    console.error('Failed to export data:', error);
-    throw error;
+    console.error('Error exporting data:', error);
+    throw error; // Or return an error indicator
   }
 }
+
+// Add other necessary functions or utilities related to the database here.

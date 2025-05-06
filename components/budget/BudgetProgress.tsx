@@ -26,8 +26,10 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budget }) => {
 
   // Calculate progress percentage
   const getProgressPercentage = (budget: Budget) => {
-    if (budget.amount <= 0) return 0;
-    const percentage = (budget.spent / budget.amount) * 100;
+    const amount = budget.amount ?? 0;
+    const spent = budget.spent ?? 0;
+    if (amount <= 0) return 0;
+    const percentage = (spent / amount) * 100;
     return Math.min(percentage, 100); // Cap at 100%
   };
 
@@ -70,7 +72,10 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budget }) => {
 
   const progressPercentage = getProgressPercentage(activeBudget);
   const progressColor = getProgressColor(progressPercentage);
-  const remaining = activeBudget.amount - activeBudget.spent;
+
+  const spent = activeBudget.spent ?? 0;
+  const amount = activeBudget.amount ?? 0;
+  const remaining = amount - spent;
 
   return (
     <Card style={styles.container}>
@@ -111,7 +116,7 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budget }) => {
         </View>
         
         <Text style={[styles.progressText, { color: theme.colors.text }]}>
-          {progressPercentage.toFixed(0)}%
+          {(progressPercentage ?? 0).toFixed(0)}%
         </Text>
       </View>
       
@@ -121,7 +126,7 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budget }) => {
             Spent
           </Text>
           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-            ${activeBudget.spent.toFixed(2)}
+            ${spent.toFixed(2)}
           </Text>
         </View>
         
@@ -132,7 +137,7 @@ const BudgetProgress: React.FC<BudgetProgressProps> = ({ budget }) => {
             Budget
           </Text>
           <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-            ${activeBudget.amount.toFixed(2)}
+            ${amount.toFixed(2)}
           </Text>
         </View>
       </View>

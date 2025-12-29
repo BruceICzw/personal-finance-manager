@@ -1,0 +1,273 @@
+{
+  "repo_notes": [
+    {
+      "content": "Developed by Bruce Chigwa"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "Introduce Wealth Wise personal finance tracker, its purpose, tech stack (React Native, Expo, SQLite), and high-level architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Architecture Overview",
+      "purpose": "Explain the three-tier architecture (UI, Context, Service, Persistence layers), separation of concerns, and key design patterns",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "purpose": "Guide developers through project setup, installing dependencies, running the development server, and understanding the project structure",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Systems",
+      "purpose": "Document the foundational systems that power the application: initialization, data management, database, and theming",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Initialization",
+      "purpose": "Detail the app startup sequence in RootLayout: font loading, database initialization, provider setup, and splash screen management",
+      "parent": "Core Systems",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Data Management (DataContext)",
+      "purpose": "Explain DataContext's role as the central state manager: CRUD operations, query functions, budget auto-calculation, and how components consume data",
+      "parent": "Core Systems",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Database Layer",
+      "purpose": "Document the SQLite database structure, schema (categories, transactions, budgets), foreign key relationships, and database service API",
+      "parent": "Core Systems",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Theme System",
+      "purpose": "Explain ThemeContext, light/dark/system theme modes, how theme values propagate to components, and styling patterns",
+      "parent": "Core Systems",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Navigation & Screens",
+      "purpose": "Document the Expo Router navigation structure, tab-based navigation, and each main screen's functionality",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Navigation Structure",
+      "purpose": "Explain Expo Router file-based routing, tab navigator setup, custom floating action button for Add tab, and navigation patterns",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Dashboard Screen",
+      "purpose": "Document the dashboard as the main overview: DashboardSummary, ExpenseChart, BudgetProgress, RecentTransactions, and time filtering",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Budgets Screen",
+      "purpose": "Explain budget management: creating/editing budgets, viewing active vs past budgets, progress tracking, and warning banners",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Transactions Screen",
+      "purpose": "Document transaction listing, filtering by type (income/expense), month navigation, and monthly summary calculations",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Add Screen",
+      "purpose": "Explain the modal-based add interface: quick add buttons for income/expense, transaction form, and budget form",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Settings Screen",
+      "purpose": "Document settings functionality: theme selection, data export, data reset, and app information",
+      "parent": "Navigation & Screens",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Components",
+      "purpose": "Document the reusable UI components organized by feature area: dashboard widgets, budget components, and shared UI primitives",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Dashboard Components",
+      "purpose": "Document DashboardSummary (financial overview), ExpenseChart (pie chart), BudgetProgress (goal widget), and RecentTransactions (latest entries)",
+      "parent": "Components",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Budget Components",
+      "purpose": "Explain BudgetForm (create/edit modal), BudgetProgress (spending goal widget), and how budget data flows through components",
+      "parent": "Components",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Shared UI Components",
+      "purpose": "Document reusable UI primitives: Card container, Button component with variants, Input fields, and design system patterns",
+      "parent": "Components",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Configuration & Deployment",
+      "purpose": "Explain application configuration, build processes, and deployment strategies for Android, iOS, and web",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Configuration",
+      "purpose": "Document app.json settings: Expo plugins (router, SQLite, splash screen), platform-specific configuration, and SQLite/SQLCipher setup",
+      "parent": "Configuration & Deployment",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Build & Deployment",
+      "purpose": "Explain EAS Build vs local builds, Android signing with keystores, iOS provisioning, ProGuard configuration, and deployment to app stores",
+      "parent": "Configuration & Deployment",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Development Tools",
+      "purpose": "Document development configuration: package.json scripts, Prettier formatting, Git ignore patterns, and project dependencies",
+      "parent": "Configuration & Deployment",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Data Model & Business Logic",
+      "purpose": "Deep dive into the data model, transaction types, category system, budget calculations, and business rules",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Transactions & Categories",
+      "purpose": "Explain transaction structure (income/expense types), category system with colors/icons, default categories, and transaction-category relationships",
+      "parent": "Data Model & Business Logic",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Budget Tracking Logic",
+      "purpose": "Detail how budgets track spending: auto-calculation of spent amounts, date range filtering, category-specific vs all-category budgets, and progress calculations",
+      "parent": "Data Model & Business Logic",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Data Aggregation & Filtering",
+      "purpose": "Explain time-based filtering (daily/weekly/monthly/yearly), category totals calculation, income/expense summaries, and query optimization",
+      "parent": "Data Model & Business Logic",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}

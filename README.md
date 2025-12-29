@@ -1,4 +1,4 @@
-# Wealth Wise - Personal Finance Manager
+# Wealth Wise - Personal Finance Manager [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/BruceICzw/personal-finance-manager)
 
 **Wealth Wise** is a mobile application built with React Native and Expo, designed to help users manage their personal finances effectively. It allows users to track income and expenses, set budgets, and visualize their spending patterns.
 
